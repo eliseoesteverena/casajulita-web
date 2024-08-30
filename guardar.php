@@ -1,27 +1,32 @@
 <?php
 
-include 'file.php';
-
 $conteo = count($_FILES["archivos"]["name"]);
 $files = array();
 $dir = "../uploads/";
-checkFiles($dir);
 try {
     for ($i = 0; $i < $conteo; $i++) {
         $ubicacionTemporal = $_FILES["archivos"]["tmp_name"][$i];
-        $msg = $ubicacionTemporal;
+       // $msg = $ubicacionTemporal;
+        $file = array();
         $nombreArchivo = $_FILES["archivos"]["name"][$i];
+        $allowedFormats = array('doc','docx' ,'xls', 'png', 'pdf', 'jpg', 'jpeg', 'webp', 'heic', 'cvs', 'svg', 'eps', 'ai', 'ps', 'pptx', 'ppt');
         $extension = pathinfo($nombreArchivo, PATHINFO_EXTENSION);
-        // Renombrar archivo
-        $uniqid = sprintf("%s_%d.%s", uniqid(), $i, $extension);
-        $reemplazo = reemplazarEspeciales($nombreArchivo);
-        $nuevoNombre = $reemplazo . $uniqid;
-        $ubicacionFinal = '../uploads/' . $nuevoNombre;
-        // Mover del temporal al directorio actual
-        move_uploaded_file($ubicacionTemporal, $ubicacionFinal);
-        $msg = array('original_name' => $nombreArchivo, 'new_name' => $nuevoNombre);
-        $files[] = $msg;
+        if(in_array($extension, $allowedFormats) ) {
+            // Renombrar archivo
+            $uniqid = sprintf("%s_%d.%s", uniqid(), $i, $extension);
+            $reemplazo = reemplazarEspeciales($nombreArchivo);
+            $nuevoNombre = $reemplazo . $uniqid;
+            $ubicacionFinal = $dir . $nuevoNombre;
+            // Mover del temporal al directorio actual
+            move_uploaded_file($ubicacionTemporal, $ubicacionFinal);
+            $files[] = array(
+                        'original_name' => $nombreArchivo, 
+                        'new_name' => $nuevoNombre
+                        );
+        }
     }
+    // Responder al cliente
+    echo json_encode($files);
 } catch (Exception $e) {
     echo json_encode('Excepción capturada: ',  $e->getMessage(), "\n");
 }
@@ -61,6 +66,3 @@ function reemplazarEspeciales($string) {
     return $string;
 }
 
-
-// Responder al cliente
-echo json_encode($files);

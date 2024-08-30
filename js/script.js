@@ -1,4 +1,3 @@
-
 // MENU:
 let menu = `<div class="nav-int">
 <div class="cont-element">
@@ -22,164 +21,158 @@ let menu = `<div class="nav-int">
 const $nav = document.querySelector('nav');
 $nav.innerHTML = menu;
 
+
+// -- Formulario de Contacto: --
+
 const sendMailBtn = document.getElementById("sendMail"),
-        inputArchivos = document.querySelector("#inputArchivos"),
-        dropArea = document.getElementById("files"),
-        dragText = document.getElementById("drag-text"),
-        nameInput = document.getElementById("name"),
-        emailInput = document.getElementById("mailAdress"),
-        messageTextarea = document.getElementById("message"),
-        parent = document.getElementById("content"),
-        referenceNode = document.getElementById("content-int"),
-        msg = document.createElement("p");
+	inputArchivos = document.querySelector("#inputArchivos"),
+	dropArea = document.getElementById("files"),
+	dragText = document.getElementById("drag-text"),
+	nameInput = document.getElementById("name"),
+	emailInput = document.getElementById("mailAdress"),
+	messageTextarea = document.getElementById("message"),
+	parent = document.getElementById("content"),
+	referenceNode = document.getElementById("content-int"),
+	msg = document.createElement("p");
 let originalDragText = dragText.innerHTML;
 
 sendMailBtn.addEventListener("click", () => {
-    sendMail("contacto");
+	sendMail("contacto");
 })
 
 // Eventos de arrastre
 dropArea.addEventListener('dragover', (event) => {
-    event.preventDefault();
-    dropArea.classList.add('active');
-    dragText.textContent = '¡Suelta!';
+	event.preventDefault();
+	dropArea.classList.add('active');
+	dragText.textContent = '¡Suelta!';
 });
 
 dropArea.addEventListener('dragleave', () => {
-    dropArea.classList.remove('active');
-    dragText.textContent = 'Arrastra y Suelta';
+	dropArea.classList.remove('active');
+	dragText.textContent = 'Arrastra y Suelta';
 });
 
 dropArea.addEventListener('drop', (event) => {
-    event.preventDefault();
-    dropArea.classList.remove('active');
-    dragText.textContent = 'Archivos cargados';
-    
-    droppedFiles = event.dataTransfer.files;
-    let infoFiles = "";
-    for (let i = 0; i < droppedFiles.length; i++) {
-        infoFiles += droppedFiles[i].name + "<br>";
-    }
-    showFiles(infoFiles);
-    inputArchivos.files = droppedFiles;
+	event.preventDefault();
+	dropArea.classList.remove('active');
+	dragText.textContent = 'Archivos cargados';
+
+	droppedFiles = event.dataTransfer.files;
+	let infoFiles = "";
+	for(let i = 0; i < droppedFiles.length; i++) {
+		infoFiles += droppedFiles[i].name + "<br>";
+	}
+	showFiles(infoFiles);
+	inputArchivos.files = droppedFiles;
 });
 
-function showFiles(infoFiles){
-    dragText.innerHTML = infoFiles;
+function showFiles(infoFiles) {
+	dragText.innerHTML = infoFiles;
 }
-inputArchivos.addEventListener("change", function () {
-    const MAXIMO_TAMANIO_BYTES = 52428800;
-    let sizeFiles = 0;
-    let infoFiles = "";
-	// si no hay archivos, regresamos
-	if (inputArchivos.files.length > 0) {
-
-	// Validamos el primer archivo únicamente
-        for(let x = 0; x < inputArchivos.files.length; x++) {
-            const archivo = inputArchivos.files[x];
-            if (archivo.size > MAXIMO_TAMANIO_BYTES) {
-                sizeFiles += archivo.size;
-            } else {
-                infoFiles += archivo.name;
-                showFiles(infoFiles);
-            }
-        } 
-        nameInput.focus();
-    }
-    if(sizeFiles > MAXIMO_TAMANIO_BYTES) {
-        const tamanioEnMb = MAXIMO_TAMANIO_BYTES / 1000000;
-        const sizeFilesEnMb = Math.trunc(sizeFiles / 1000000);
-        alert(`El tamaño máximo es ${tamanioEnMb} MB Y TU SELECCIONASTE ${sizeFilesEnMb} MB`);
-        // Limpiar
-        inputArchivos.value = "";
-    }
+inputArchivos.addEventListener("change", function() {
+	const MAXIMO_TAMANIO_BYTES = 52428800;
+	let sizeFiles = 0;
+	let infoFiles = "";
+    
+	if(inputArchivos.files.length > 0) {
+			// Validamos el primer archivo únicamente
+		for(let x = 0; x < inputArchivos.files.length; x++) {
+			const archivo = inputArchivos.files[x];
+			if(archivo.size > MAXIMO_TAMANIO_BYTES) {
+				sizeFiles += archivo.size;
+			} else {
+				infoFiles += archivo.name;
+				showFiles(infoFiles);
+			}
+		}
+		nameInput.focus();
+	}
+	if(sizeFiles > MAXIMO_TAMANIO_BYTES) {
+		const tamanioEnMb = MAXIMO_TAMANIO_BYTES / 1000000;
+		const sizeFilesEnMb = Math.trunc(sizeFiles / 1000000);
+		alert(`El tamaño máximo es ${tamanioEnMb} MB Y TU SELECCIONASTE ${sizeFilesEnMb} MB`);
+		// Limpiar
+		inputArchivos.value = "";
+	}
 
 });
 
-async function sendMail(location){
-    sendMailBtn.textContent = "Enviando..."
-    sendMailBtn.setAttribute("disabled", "disabled");
-          const archivosParaSubir = inputArchivos.files;
-          let locationFile;
-          let correo = "";
-          msg.classList.add("msg");
-          msg.setAttribute("id", "msg");
+async function sendMail(location) {
+	sendMailBtn.textContent = "Enviando..."
+	sendMailBtn.setAttribute("disabled", "disabled");
+	const archivosParaSubir = inputArchivos.files;
+	let locationFile;
+	let correo = "";
+	msg.classList.add("msg");
+	msg.setAttribute("id", "msg");
 
-        // Preparamos el formdata
-        const formData = new FormData();
-        if(archivosParaSubir > 0){
-            // Agregamos cada archivo a "archivos[]". Los corchetes son importantes
-            for (const archivo of archivosParaSubir) {
-                formData.append("archivos[]", archivo);
-            }
-            const archivoSubido = await fetch("../guardar.php", {
-                method: "POST",
-                body: formData,
-            });
-    
-            locationFile = await archivoSubido.json();
-
-            correo = "<div style=\"display:block;color:#00324e;text-indent:.5rem;padding:.3rem;line-height:1.5;\"><h2>Archivos:</h2>";
-            Object.entries(locationFile).forEach(([key, value]) => {
-                correo += "<p><a style=\"font-weight: 600;text-decoration:none;\" href=\"https:\/\/casajulita.com.ar/uploads/" + locationFile[key].new_name + "\">" + locationFile[key].original_name + "</a></p>";
-            });
-            correo += "</div>"
-        }
+	if(inputArchivos.files.length <= 0) {
         
+	} else {
+		// Preparamos el formdata
+		const formData = new FormData();
+		// Agregamos cada archivo a "archivos[]". Los corchetes son importantes
+		for(const archivo of archivosParaSubir) {
+			formData.append("archivos[]", archivo);
+		}
+		const archivoSubido = await fetch("../api/guardar.php", {
+			method: "POST",
+			body: formData,
+		});
 
-    let name = nameInput.value;
-    let email = emailInput.value;
-    let message = messageTextarea.value + correo;
-    
-    const datos = {
-        location: location,
-        data_message: {
-            name: name,
-            email: email,
-            message: message
-        }
-    };
-    let datosJSON = JSON.stringify(datos);
-    fetch('../correo.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: datosJSON
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.json(); // Obtén la respuesta como JSON
-    })
-    .then(data => {
-        sendMailBtn.removeAttribute("disabled");
-        sendMailBtn.textContent = "Enviar";
-        msg.textContent = data;
-        parent.insertBefore(msg, referenceNode);
-        nameInput.value = "";
-        emailInput.value = "";
-        messageTextarea.value = "";
-        inputArchivos.value = "";
-        dragText.innerHTML = originalDragText;
-        setTimeout(remove, 8000);
-    })
-    .catch(error => {
-        console.error('Fetch error:', error);
-        sendMailBtn.removeAttribute("disabled");
-        sendMailBtn.textContent = "Enviar";
-        msg.textContent = "Error, vuelve a intentarlo más tarde";
-        parent.insertBefore(msg, referenceNode);
-        nameInput.value = "";
-        emailInput.value = "";
-        messageTextarea.value = "";
-        inputArchivos.value = "";
-        dragText.innerHTML = originalDragText;
-        setTimeout(remove, 8000);
-    });
+		locationFile = await archivoSubido.json();
+
+		correo = "<div style=\"display:block;color:#00324e;text-indent:.5rem;padding:.3rem;line-height:1.5;\"><h2>Archivos:</h2>";
+		Object.entries(locationFile).forEach(([key, value]) => {
+			correo += "<p><a style=\"font-weight: 600;text-decoration:none;\" href=\"https:\/\/casajulita.com.ar/uploads/" + locationFile[key].new_name + "\">" + locationFile[key].original_name + "</a></p>";
+		});
+		correo += "</div>"
+	}
+
+	let name = nameInput.value;
+	let email = emailInput.value;
+	let message = messageTextarea.value + correo;
+
+	const datos = {
+		location: location,
+		data_message: {
+			name: name,
+			email: email,
+			message: message
+		}
+	};
+	let datosJSON = JSON.stringify(datos);
+	fetch('../api/correo.php', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: datosJSON
+		})
+		.then(response => {
+			if(!response.ok) {
+				throw new Error('Network response was not ok');
+			}
+			return response.json(); // Obtén la respuesta como JSON
+		})
+		.then(data => {
+			sendMailBtn.removeAttribute("disabled");
+			sendMailBtn.textContent = "Enviar";
+			msg.textContent = data;
+			parent.insertBefore(msg, referenceNode);
+			nameInput.value = "";
+			emailInput.value = "";
+			messageTextarea.value = "";
+			inputArchivos.value = "";
+			dragText.innerHTML = originalDragText;
+			setTimeout(remove, 8000);
+		})
+		.catch(error => {
+			console.error('Fetch error:', error);
+		});
 }
+
 function remove() {
-    const msg = document.getElementById("msg");
-    msg.remove();
+	const msg = document.getElementById("msg");
+	msg.remove();
 }
